@@ -14,7 +14,6 @@ const seedCombos = async () => {
 
     const combosData = [
       {
-        _id: "6933ed99ae0e933d6e29fb2d",
         name: "Combo Sáng Tỉnh Táo",
         category: "Combo",
         basePrice: 55000,
@@ -37,14 +36,13 @@ const seedCombos = async () => {
         updatedAt: new Date(),
       },
       {
-        _id: "6933ed99ae0e933d6e29fb2e",
         name: "Combo Trà Bánh Chill",
         category: "Combo",
         basePrice: 75000,
         discountedPrice: 65000,
         discount: 13,
         description: "Sự kết hợp hoàn hảo giữa vị thanh mát của Trà đào và vị ngọt ngào của Tiramisu.",
-        image_url: "combo-tra-banh-chill.jpg",
+        image_url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400",
         isActive: true,
         items: [
           {
@@ -60,14 +58,13 @@ const seedCombos = async () => {
         updatedAt: new Date(),
       },
       {
-        _id: "6933ed99ae0e933d6e29fb2f",
         name: "Combo Béo Ngậy",
         category: "Combo",
         basePrice: 70000,
         discountedPrice: 59000,
         discount: 16,
         description: "Vị béo của Bạc xỉu hòa quyện cùng lớp nhân socola tan chảy của bánh Lava.",
-        image_url: "combo-beo-ngay.jpg",
+        image_url: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400",
         isActive: true,
         items: [
           {
@@ -83,14 +80,13 @@ const seedCombos = async () => {
         updatedAt: new Date(),
       },
       {
-        _id: "6933ed99ae0e933d6e29fb30",
         name: "Combo Bữa Xế",
         category: "Combo",
         basePrice: 85000,
         discountedPrice: 75000,
         discount: 12,
         description: "Nạp năng lượng buổi chiều với Sinh tố bơ bổ dưỡng và bánh Red Velvet.",
-        image_url: "combo-bua-xe.jpg",
+        image_url: "https://images.unsplash.com/photo-1590621426169-a092ff6ff9a4?w=400",
         isActive: true,
         items: [
           {
@@ -106,14 +102,13 @@ const seedCombos = async () => {
         updatedAt: new Date(),
       },
       {
-        _id: "6933ed99ae0e933d6e29fb31",
         name: "Combo Đôi Bạn Thân",
         category: "Combo",
         basePrice: 60000,
         discountedPrice: 50000,
         discount: 17,
         description: "Mua 2 ly trà sữa trân châu đường đen với giá ưu đãi.",
-        image_url: "combo-doi-ban.jpg",
+        image_url: "https://images.unsplash.com/photo-1505252585461-04db1267ae5b?w=400",
         isActive: true,
         items: [
           {
@@ -126,20 +121,12 @@ const seedCombos = async () => {
       },
     ];
 
-    // Insert combos with upsert to update existing ones
-    const result = await Combo.bulkWrite(
-      combosData.map((combo) => ({
-        updateOne: {
-          filter: { _id: combo._id },
-          update: { $set: combo },
-          upsert: true,
-        },
-      }))
-    );
+    // Clear existing combos and insert new ones
+    await Combo.deleteMany({});
+    const result = await Combo.insertMany(combosData);
 
     console.log("✅ Combos seeded successfully!");
-    console.log("📊 Upserted:", result.upsertedCount);
-    console.log("📊 Modified:", result.modifiedCount);
+    console.log("📊 Inserted:", result.length);
 
     await mongoose.disconnect();
     console.log("✅ Disconnected from MongoDB");

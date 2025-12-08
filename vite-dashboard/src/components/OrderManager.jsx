@@ -315,24 +315,6 @@ const OrderManager = () => {
         <div className="loading">Đang tải dữ liệu...</div>
       ) : (
         <>
-          <div className="filters-bar">
-            <input type="text" placeholder="Tìm kiếm (mã, tên, số điện thoại, món)" value={filterKeyword} onChange={(e) => setFilterKeyword(e.target.value)} />
-            <input type="text" placeholder="Thành phố" value={filterCity} onChange={(e) => setFilterCity(e.target.value)} />
-            <input type="text" placeholder="Quận/Huyện" value={filterDistrict} onChange={(e) => setFilterDistrict(e.target.value)} />
-            <input type="text" placeholder="Phường/Xã" value={filterWard} onChange={(e) => setFilterWard(e.target.value)} />
-            <select value={filterPayment} onChange={(e) => setFilterPayment(e.target.value)}>
-              <option value="">Phương thức thanh toán</option>
-              <option value="Cash">Tiền mặt</option>
-              <option value="VNPAY">VNPAY</option>
-              <option value="MOMO">MOMO</option>
-              <option value="Card">Thẻ</option>
-            </select>
-            <label className="date-label">Từ: <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} /></label>
-            <label className="date-label">Đến: <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} /></label>
-            <button className="btn-apply-filters" onClick={() => fetchOrders()}>Áp dụng</button>
-            <button className="btn-clear-filters" onClick={() => { setFilterCity(""); setFilterDistrict(""); setFilterWard(""); setFilterPayment(""); setFilterDateFrom(""); setFilterDateTo(""); setFilterKeyword(""); fetchOrders(); }}>Xóa</button>
-          </div>
-
           <div className="table-responsive">
           <table className="order-table">
             <thead>
