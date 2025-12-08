@@ -1,2 +1,0 @@
-# coffedashboard
-for dashboard only
