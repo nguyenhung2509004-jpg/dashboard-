@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import RevenueManager from './components/RevenueManager'; // Import RevenueManager
 import OrderManager from './components/OrderManager'
+import PromotionManager from './components/PromotionManager'
 import './App.css'
 
 function App() {
@@ -37,11 +38,18 @@ function App() {
         >
           📊 Doanh Thu
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'promotions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('promotions')}
+        >
+          🎁 Khuyến Mãi
+        </button>
       </div>
 
       <div className="tab-content">
         {activeTab === 'orders' && <OrderManager />}
         {activeTab === 'revenue' && <RevenueManager />}
+        {activeTab === 'promotions' && <PromotionManager />}
       </div>
     </div>
   )

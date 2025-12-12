@@ -13,6 +13,9 @@ const Item = require("./models/products.model");
 // Routes (orders)
 const orderRoutes = require("./routes/orders.routes");
 
+// Routes (promotions)
+const promotionRoutes = require("./routes/promotions.routes");
+
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -112,6 +115,11 @@ app.get("/items", async (req, res) => {
 // 📦 ROUTES (Orders)
 // ================================
 app.use("/orders", orderRoutes);
+
+// ================================
+// 📦 ROUTES (Promotions)
+// ================================
+app.use("/promotions", promotionRoutes);
 
 // Test
 app.get("/testconnection", (req, res) => res.json("OK"));

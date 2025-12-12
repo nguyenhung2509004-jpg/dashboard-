@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const Promotion = require("../models/promotions.model");
+const Product = require("../models/products.model");
 
 // --- Helper function: Validate promotion uniqueness ---
 const validatePromotion = async (scope, productIds, categories, comboItems, excludePromotionId = null) => {
@@ -304,10 +305,23 @@ router.put("/:id", async (req, res) => {
         if (minOrderTotal !== undefined) promotion.minOrderTotal = minOrderTotal;
         if (isActive !== undefined) promotion.isActive = isActive;
 
-        // Update scope-specific fields
-        if (productIds !== undefined) promotion.productIds = productIds;
-        if (categories !== undefined) promotion.categories = categories;
-        if (comboItems !== undefined) promotion.comboItems = comboItems;
+        // Update scope-specific fields (only if scope matches or if scope is being changed)
+        if (scope !== undefined) {
+            // Clear old scope-specific fields
+            promotion.productIds = [];
+            promotion.categories = [];
+            promotion.comboItems = [];
+        }
+
+        if (productIds !== undefined && (scope === "PRODUCT" || (scope === undefined && promotion.scope === "PRODUCT"))) {
+            promotion.productIds = productIds;
+        }
+        if (categories !== undefined && (scope === "CATEGORY" || (scope === undefined && promotion.scope === "CATEGORY"))) {
+            promotion.categories = categories;
+        }
+        if (comboItems !== undefined && (scope === "COMBO" || (scope === undefined && promotion.scope === "COMBO"))) {
+            promotion.comboItems = comboItems;
+        }
 
         await promotion.save();
 
@@ -339,6 +353,133 @@ router.delete("/:id", async (req, res) => {
         if (err.name === "CastError") {
             return res.status(400).json({ error: "Invalid promotion ID" });
         }
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- API: Calculate applicable promotions for an order ---
+router.post("/calculate", async (req, res) => {
+    try {
+        const { items, subtotal } = req.body;
+
+        if (!items || !Array.isArray(items) || subtotal === undefined) {
+            return res.status(400).json({
+                error: "Missing required fields: items (array), subtotal (number)"
+            });
+        }
+
+        // Get active promotions
+        const now = new Date();
+        const promotions = await Promotion.find({
+            isActive: true,
+            startDate: { $lte: now },
+            endDate: { $gte: now }
+        });
+
+        // Get product details for items
+        const productIds = items.map(item => item.productId);
+        const products = await Product.find({ _id: { $in: productIds } });
+        const productMap = {};
+        products.forEach(p => productMap[p._id] = p);
+
+        // Count items by product
+        const itemCounts = {};
+        items.forEach(item => {
+            itemCounts[item.productId] = (itemCounts[item.productId] || 0) + item.quantity;
+        });
+
+        const applicablePromotions = [];
+        let totalDiscount = 0;
+
+        for (const promo of promotions) {
+            let discount = 0;
+            let applies = false;
+
+            if (promo.scope === "ORDER") {
+                if (subtotal >= (promo.minOrderTotal || 0)) {
+                    applies = true;
+                    if (promo.type === "PERCENT") {
+                        discount = subtotal * (promo.value / 100);
+                    } else if (promo.type === "FIXED_AMOUNT") {
+                        discount = promo.value;
+                    }
+                }
+            } else if (promo.scope === "CATEGORY") {
+                const categoryItems = items.filter(item => {
+                    const prod = productMap[item.productId];
+                    return prod && promo.categories.includes(prod.category);
+                });
+                if (categoryItems.length > 0) {
+                    applies = true;
+                    const categorySubtotal = categoryItems.reduce((sum, item) => {
+                        const prod = productMap[item.productId];
+                        return sum + (prod ? prod.basePrice * item.quantity : 0);
+                    }, 0);
+                    if (promo.type === "PERCENT") {
+                        discount = categorySubtotal * (promo.value / 100);
+                    } else if (promo.type === "FIXED_AMOUNT") {
+                        discount = promo.value;
+                    }
+                }
+            } else if (promo.scope === "PRODUCT") {
+                const productItems = items.filter(item => promo.productIds.some(pid => pid.toString() === item.productId));
+                if (productItems.length > 0) {
+                    applies = true;
+                    const productSubtotal = productItems.reduce((sum, item) => {
+                        const prod = productMap[item.productId];
+                        return sum + (prod ? prod.basePrice * item.quantity : 0);
+                    }, 0);
+                    if (promo.type === "PERCENT") {
+                        discount = productSubtotal * (promo.value / 100);
+                    } else if (promo.type === "FIXED_AMOUNT") {
+                        discount = promo.value;
+                    }
+                }
+            } else if (promo.scope === "COMBO") {
+                // Check if combo requirements are met
+                const comboMet = promo.comboItems.every(comboItem => {
+                    const count = itemCounts[comboItem.productId.toString()] || 0;
+                    return count >= comboItem.requiredQty;
+                });
+                if (comboMet) {
+                    applies = true;
+                    if (promo.type === "FIXED_PRICE_COMBO") {
+                        // Calculate the combo price vs original
+                        const originalComboPrice = promo.comboItems.reduce((sum, comboItem) => {
+                            const prod = productMap[comboItem.productId];
+                            return sum + (prod ? prod.basePrice * comboItem.requiredQty : 0);
+                        }, 0);
+                        discount = originalComboPrice - promo.value;
+                    } else if (promo.type === "PERCENT") {
+                        const comboPrice = promo.comboItems.reduce((sum, comboItem) => {
+                            const prod = productMap[comboItem.productId];
+                            return sum + (prod ? prod.basePrice * comboItem.requiredQty : 0);
+                        }, 0);
+                        discount = comboPrice * (promo.value / 100);
+                    } else if (promo.type === "FIXED_AMOUNT") {
+                        discount = promo.value;
+                    }
+                }
+            }
+
+            if (applies && discount > 0) {
+                applicablePromotions.push({
+                    promotionId: promo._id,
+                    name: promo.name,
+                    discountAmount: discount
+                });
+                totalDiscount += discount;
+            }
+        }
+
+        const finalTotal = Math.max(subtotal - totalDiscount, 0);
+
+        res.json({
+            applicablePromotions,
+            totalDiscount,
+            finalTotal
+        });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
