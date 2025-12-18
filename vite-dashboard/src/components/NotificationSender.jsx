@@ -33,7 +33,7 @@ const NotificationSender = () => {
 
     try {
       const apiUrl = useLocalAPI
-        ? 'http://localhost:3000/notifications/sendAllClient'
+        ? 'https://coffeeshop-mobileappproject-backend.onrender.com/notifications/sendAllClient'
         : '/fcm/sendallclient';
 
       console.log('📤 SENDING POST REQUEST:');
@@ -296,7 +296,7 @@ const NotificationSender = () => {
           style={{ background: useLocalAPI ? '#28a745' : '#6c757d', marginLeft: '10px' }}
           onClick={() => {
             setUseLocalAPI(!useLocalAPI);
-            alert(`${!useLocalAPI ? '🔄 Switched to LOCAL API' : '🌐 Switched to EXTERNAL API (via proxy)'}\n\n${!useLocalAPI ? 'http://localhost:3000/notifications/sendAllClient' : '/fcm/sendallclient (proxied to external)'}`);
+            alert(`${!useLocalAPI ? '🔄 Switched to LOCAL API' : '🌐 Switched to EXTERNAL API (via proxy)'}\n\n${!useLocalAPI ? 'https://coffeeshop-mobileappproject-backend.onrender.com/notifications/sendAllClient' : '/fcm/sendallclient (proxied to external)'}`);
           }}
         >
           {useLocalAPI ? '🌐 External API' : '🏠 Local API'}
