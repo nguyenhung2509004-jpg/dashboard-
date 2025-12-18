@@ -27,6 +27,7 @@ const PromotionManager = () => {
     categories: [],
     comboItems: []
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
@@ -62,6 +63,8 @@ const PromotionManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       // Validation
       if (!formData.name.trim()) {
@@ -102,6 +105,8 @@ const PromotionManager = () => {
     } catch (error) {
       console.error('Promotion save error:', error);
       toast.error(error.response?.data?.error || 'Failed to save promotion');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -439,7 +444,7 @@ const PromotionManager = () => {
           )}
 
           <div className="form-actions">
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-primary" disabled={isSubmitting}>
               {editingPromotion ? 'Update' : 'Create'} Promotion
             </button>
             <button type="button" onClick={resetForm} className="btn-secondary">
