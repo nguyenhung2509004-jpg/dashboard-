@@ -84,7 +84,7 @@ const OrderManager = () => {
       if (filterDateTo) params.date_to = filterDateTo;
       if (filterKeyword) params.keyword = filterKeyword;
 
-      const res = await axios.get(`${API_URL}/orders/filter`, { params });
+      const res = await axios.get(`${API_URL}/orders`, { params });
       const sortedOrders = res.data.sort((a, b) => 
         new Date(b.orderDate) - new Date(a.orderDate)
       );

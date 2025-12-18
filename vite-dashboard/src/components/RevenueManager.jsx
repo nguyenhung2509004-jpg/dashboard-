@@ -43,7 +43,7 @@ const RevenueManager = () => {
     try {
       setLoading(true);
       // Fetch all orders (since status filter may not work on production)
-      const res = await axios.get(`${API_URL}/orders/filter`);
+      const res = await axios.get(`${API_URL}/orders`);
       const allOrders = res.data;
       const orders = allOrders.filter(order => order.status === 'Delivered');
 
