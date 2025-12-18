@@ -318,20 +318,6 @@ const NotificationSender = () => {
             <div className="notification-body">{formData.body || 'Nội dung thông báo sẽ hiển thị ở đây...'}</div>
           </div>
         </div>
-        <div style={{ marginTop: '15px', padding: '10px', background: '#f8f9fa', borderRadius: '5px', fontSize: '0.9rem' }}>
-          <strong>🔍 Debug Info:</strong>
-          <br />• <strong>Current API:</strong> {useLocalAPI ? '🏠 Local (Dashboard only)' : '🌐 External (Mobile + Dashboard)'}
-          <br />• API URL: {useLocalAPI ? 'http://localhost:3000/notifications/sendAllClient' : 'https://coffeeshop-mobileappproject-backend.onrender.com/fcm/sendallclient'}
-          <br />• <strong style={{color: 'red'}}>Method: POST</strong> (Gửi thông báo đến mobile clients)
-          <br />• Headers: Content-Type: application/json
-          <br />• Body: {`{title: "...", body: "..."}`}
-          <br />• <strong>Network Error có thể do:</strong>
-          <br />  - Endpoint không tồn tại trên server external
-          <br />  - Server external không có FCM integration
-          <br />  - Cần authentication (API key)
-          <br />  - CORS blocked
-          <br />  - Server đang sleep (Render free tier)
-        </div>
       </div>
     </div>
   );
